@@ -54,3 +54,17 @@ for (var in vars_to_plot) {
 
 nrow(songsdf)        # original records
 nrow(songsdf_clean)  # records after delete
+
+# 检查是否有完全重复的行
+duplicated_rows <- duplicated(songsdf_clean)
+sum(duplicated_rows)  # 查看有多少行重复
+
+# 查看重复的具体内容
+songsdf_clean[duplicated_rows, ]
+# 删除完全重复的行（保留第一条）
+data_unique <- songsdf_clean[!duplicated(songsdf_clean), ]
+# 只根据某列（如 "track_name"）判断重复
+data_unique_track_id <- data_unique[!duplicated(data_unique$track_id), ]
+final_data <- data_unique_track_id[!duplicated(data_unique_track_id$track_name), ]
+write.csv(final_data,'spotify songs after cleaning.csv')
+
