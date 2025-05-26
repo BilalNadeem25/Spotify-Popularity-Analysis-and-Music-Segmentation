@@ -13,18 +13,18 @@ songsdf <- read.csv('30000 spotify songs.csv')
 vis_miss(songsdf)
 
 #delete all missing values because the ratio of missing value is so low
-songsdf <- songsdf[complete.cases(songsdf), ]
+songsdf_clean <- songsdf[complete.cases(songsdf), ]
 vis_miss(songsdf)
 
 # columns what can be detected
-vars_to_plot <- c('track_popularity','danceability','energy','loudness',
+vars_to_plot <- c('danceability','energy','loudness',
                   'speechiness','acousticness','liveness',
                   'valence','tempo','duration_ms')
 
 # 1. normalization by using Z-score
-scaled_data <- songsdf %>%
+scaled_data <- songsdf_clean %>%
   select(all_of(vars_to_plot)) %>%
-  mutate(across(everything(), scale))  
+  mutate(across(everything(), scale))   
 
 # 2. pivot_longer(same as gather() in tidyr)
 long_data <- scaled_data %>%
@@ -34,9 +34,7 @@ long_data <- scaled_data %>%
 ggplot(long_data, aes(x = variable, y = value)) +
   geom_boxplot(outlier.colour = "red") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "outliers plot after normalization", y = "")
-
-songsdf_clean <- songsdf
+  labs(title = "Boxplots of audio features with outliers", y = "")
 
 # filter and detect outliers for each rows
 for (var in vars_to_plot) {
