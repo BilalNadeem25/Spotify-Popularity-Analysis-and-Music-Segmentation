@@ -1,4 +1,4 @@
-#options(repos = c(CRAN = "https://cloud.r-project.org/"))
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
 
 install.packages('naniar')
 install.packages('ggplot2')
@@ -14,7 +14,7 @@ songsdf <- read.csv('30000 spotify songs.csv')
 # overview of missingness
 vis_miss(songsdf)
 
-# filter out records with empty data
+# filter out records with missing data
 songsdf_clean <- songsdf[complete.cases(songsdf), ]
 
 cat("Number of records in dataset after removing missing data: ", nrow(songsdf_clean), "\n")
@@ -49,19 +49,93 @@ audio_0to1_df <- songsdf_clean[, audio_0to1]
 audio_0to1_df_long <- audio_0to1_df %>%
   pivot_longer(cols = everything(), names_to = "feature", values_to = "value")
 
-#ggplot(audio_0to1_df_long, aes(x = feature, y = value)) +
-#  geom_boxplot(outlier.colour = "red") +
-#  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-#  labs(title = "Boxplots of audio data ranging from 0.0 to 1.0", x = "Audio Feature",
-#       y = "Value")
+ggplot(audio_0to1_df_long, aes(x = feature, y = value)) +
+  geom_boxplot(outlier.colour = "red") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Boxplots of audio data ranging from 0.0 to 1.0", x = "Audio Feature",
+       y = "Value")
 
-audio_loudness_df <- songsdf %>%
+audio_loudness_df <- songsdf_clean %>%
   select(loudness)
 
-#ggplot(audio_loudness_df, aes(x = "", y = loudness)) +
-#  geom_boxplot(outlier.colour = "red") +
-#  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-#  labs(title = "Boxplot of Loudness", x = "Loudness", y = "Value in dB")
+ggplot(audio_loudness_df, aes(x = "", y = loudness)) +
+  geom_boxplot(outlier.colour = "red") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Boxplot of Loudness with outliers", x = "Loudness", y = "Value in dB")
+
+ggplot(audio_loudness_df, aes(x = loudness)) +
+  geom_histogram(binwidth = 1, fill = "#2C3E50", color = "white", alpha = 0.8) +
+  labs(
+    title = "Distribution of Loudness",
+    x = "Loudness (dB)",
+    y = "Number of Tracks"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12)
+  )
+
+# determine interquartile range, lower and upper bounds
+Q1 <- quantile(songsdf_clean[["loudness"]], 0.25, na.rm = TRUE)
+Q3 <- quantile(songsdf_clean[["loudness"]], 0.75, na.rm = TRUE)
+
+IQR <- Q3 - Q1
+
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+# filter outliers based on IQR
+songsdf_clean <- songsdf_clean %>%
+  filter(loudness >= lower_bound & loudness <= upper_bound)
+
+audio_loudness_df <- songsdf_clean %>%
+  select(loudness)
+
+ggplot(audio_loudness_df, aes(x = "", y = loudness)) +
+          geom_boxplot(outlier.colour = "red") +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+          labs(title = "Boxplot of Loudness without outliers", x = "Loudness", y = "Value in dB")
+
+
+audio_tempo_df <- songsdf_clean %>%
+  select(tempo)
+
+ggplot(audio_tempo_df, aes(x = "", y = tempo)) +
+  geom_boxplot(outlier.colour = "red") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Boxplot of Tempo with outliers", x = "Tempo", y = "Value in bpm")
+
+# determine interquartile range, lower and upper bounds
+Q1 <- quantile(songsdf_clean[["tempo"]], 0.25, na.rm = TRUE)
+Q3 <- quantile(songsdf_clean[["tempo"]], 0.75, na.rm = TRUE)
+
+IQR <- Q3 - Q1
+
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+# filter outliers based on IQR
+songsdf_clean <- songsdf_clean %>%
+  filter(tempo >= lower_bound & tempo <= upper_bound)
+
+audio_tempo_df <- songsdf_clean %>%
+  select(tempo)
+
+ggplot(audio_tempo_df, aes(x = "", y = tempo)) +
+  geom_boxplot(outlier.colour = "red") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Boxplot of Tempo without outliers", x = "Tempo", y = "Value in bpm")
+
+
+
+
+
+
+
+
+
 
 
 
