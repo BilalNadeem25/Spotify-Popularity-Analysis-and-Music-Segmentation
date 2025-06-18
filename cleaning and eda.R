@@ -4,10 +4,12 @@ install.packages('naniar')
 install.packages('ggplot2')
 install.packages('dplyr')
 install.packages("tidyr")
+install.packages("ggcorrplot")
 library(tidyr)            
 library(naniar)
 library(ggplot2)
 library(dplyr)
+library(ggcorrplot)
 
 songsdf <- read.csv('30000 spotify songs.csv')
 
@@ -232,7 +234,38 @@ ggplot(audio_0to1_df_long, aes(x = feature, y = value)) +
   labs(title = "Boxplots of audio data ranging from 0.0 to 1.0 without outliers", x = "Audio Feature",
        y = "Value")
 
-write.csv(songsdf_clean,'30000 spotify songs - clustering.csv', row.names = FALSE)
+songsdf_clean$vocals <- (1 - songsdf_clean$instrumentalness)
+
+songsdf_clean$speechy_vocals <- (songsdf_clean$speechiness * songsdf_clean$vocals)
+
+songsdf_clean$intensity <- (songsdf_clean$loudness * songsdf_clean$tempo)
+
+songsdf_clean$ambiance <- (songsdf_clean$acousticness * songsdf_clean$instrumentalness)
+
+songsdf_clean$val_energy <- (songsdf_clean$valence * songsdf_clean$energy)
+
+songsdf_clean$vibeness <- (songsdf_clean$danceability * songsdf_clean$energy)
+
+features <- c('danceability','energy','loudness','speechiness','acousticness',
+              'instrumentalness','liveness','valence','tempo','vocals','speechy_vocals',
+              'intensity','ambiance','val_energy','vibeness')
+
+audio_features <- songsdf_clean[,features]
+
+# Calculate the correlation matrix of audio features
+cor_matrix <- cor(audio_features, use = "complete.obs")
+
+# Plot the correlation matrix of audio features
+ggcorrplot(cor_matrix,
+           method = "square",
+           type = "full",   
+           lab = TRUE,
+           lab_size = 3,
+           title = "Correlation Matrix Of Audio Features", # 大写
+           colors = c("blue", "white", "red"))
+
+
+#write.csv(songsdf_clean,'30000 spotify songs - clustering.csv', row.names = FALSE)
 
 
 
