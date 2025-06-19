@@ -1,5 +1,5 @@
 # Predicting track_popularity using the Random Forest model and evaluating the results
-
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
 # First install the randomForest package
 if (!require(randomForest)) install.packages("randomForest")
 if (!require(caret)) install.packages("caret")
@@ -11,12 +11,13 @@ library(caret)
 library(Metrics)
 
 # Read the cleaned data
-data <- read.csv("cleaned_spotify_model_data.csv")
+data <- read.csv("30000 spotify songs - cleaned.csv")
 
 # Creating Feature Columns
 features <- c(
-  "energy", "loudness", "acousticness", "instrumentalness",
-  "tempo", "duration_ms", "track_age"
+  "energy", "loudness","ambiance","duration_ms",
+  "track_age","playlist_subgenre_encoded","is_remix",
+  "artist_popularity", "artist_track_count"
 )
 target <- "track_popularity"
 
@@ -53,7 +54,16 @@ result_df <- data.frame(
   Actual = test_data[[target]],
   Predicted = predictions
 )
-write.csv(result_df, "actual_vs_predicted_popularity.csv", row.names = FALSE)
+
+ggplot(data = NULL, aes(x = result_df$Actual, y = result_df$Predicted)) +
+  geom_point(alpha = 0.4, color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
+  labs(
+    title = "Predicted vs Actual Track Popularity",
+    x = "Actual Popularity",
+    y = "Predicted Popularity"
+  ) +
+  theme_minimal()
 
 # Characteristic importance
 cat("\n📌 Feature Importance:\n")

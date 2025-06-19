@@ -6,7 +6,7 @@ library(lubridate)
 library(dplyr)
 
 # Read raw data
-data <- read.csv("30000 spotify songs cleaned.csv", stringsAsFactors = FALSE)
+data <- read.csv("30000 spotify songs - cleaned.csv", stringsAsFactors = FALSE)
 
 # Cleaning track_popularity: removing NA and non-numbers
 data <- data[!is.na(data$track_popularity), ]

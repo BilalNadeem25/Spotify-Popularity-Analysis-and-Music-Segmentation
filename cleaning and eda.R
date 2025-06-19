@@ -1,12 +1,14 @@
 options(repos = c(CRAN = "https://cloud.r-project.org/"))
 
 install.packages('naniar')
+install.packages('lubridate')
 install.packages('ggplot2')
 install.packages('dplyr')
 install.packages("tidyr")
 install.packages("ggcorrplot")
 library(tidyr)            
 library(naniar)
+library(lubridate)
 library(ggplot2)
 library(dplyr)
 library(ggcorrplot)
@@ -234,6 +236,45 @@ ggplot(audio_0to1_df_long, aes(x = feature, y = value)) +
   labs(title = "Boxplots of audio data ranging from 0.0 to 1.0 without outliers", x = "Audio Feature",
        y = "Value")
 
+
+
+audio_duration_df <- songsdf_clean %>%
+  select(duration_ms)
+
+ggplot(audio_duration_df, aes(x = "", y = duration_ms)) +
+  geom_boxplot(outlier.colour = "red") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Boxplot of duration with outliers", x = "duration_ms", y = "Value")
+
+songsdf_clean <- filter_outlier(songsdf_clean, 'duration_ms')
+
+audio_duration_df <- songsdf_clean %>%
+  select(duration_ms)
+
+ggplot(audio_duration_df, aes(x = "", y = duration_ms)) +
+  geom_boxplot(outlier.colour = "red") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Boxplot of duration without outliers", x = "duration_ms", y = "Value")
+
+
+
+release_date_df <- songsdf_clean %>%
+  select(track_album_release_date)
+
+# Convert the column (not the whole data frame) to Date
+release_date_vector <- as.Date(release_date_df$track_album_release_date)
+
+# Plot histogram
+hist(release_date_vector,
+     breaks = "years",
+     main = "Histogram of Album Release Dates",
+     xlab = "Release Date",
+     col = "skyblue",
+     border = "white")
+
+
+# Feature Engineering
+
 songsdf_clean$vocals <- (1 - songsdf_clean$instrumentalness)
 
 songsdf_clean$speechy_vocals <- (songsdf_clean$speechiness * songsdf_clean$vocals)
@@ -245,6 +286,31 @@ songsdf_clean$ambiance <- (songsdf_clean$acousticness * songsdf_clean$instrument
 songsdf_clean$val_energy <- (songsdf_clean$valence * songsdf_clean$energy)
 
 songsdf_clean$vibeness <- (songsdf_clean$danceability * songsdf_clean$energy)
+
+songsdf_clean$track_album_release_year <- as.numeric(as.character(substr(songsdf_clean$track_album_release_date, 1, 4)))
+
+current_year <- as.numeric(format(Sys.Date(), "%Y"))
+
+songsdf_clean$track_age <- current_year - songsdf_clean$track_album_release_year
+
+songsdf_clean$playlist_subgenre_encoded <- as.numeric(factor(songsdf_clean$playlist_subgenre))
+
+songsdf_clean$is_remix <- ifelse(
+  grepl("remix", songsdf_clean$track_name, ignore.case = TRUE),
+  1,
+  0
+)
+
+artist_stats <- songsdf_clean %>%
+  group_by(track_artist) %>%
+  summarise(
+    artist_popularity = mean(track_popularity, na.rm = TRUE),
+    artist_track_count = n()
+  )
+songsdf_clean <- left_join(songsdf_clean, artist_stats, by = "track_artist")
+
+
+# Correlation
 
 features <- c('danceability','energy','loudness','speechiness','acousticness',
               'instrumentalness','liveness','valence','tempo','vocals','speechy_vocals',
@@ -265,7 +331,9 @@ ggcorrplot(cor_matrix,
            colors = c("blue", "white", "red"))
 
 
-#write.csv(songsdf_clean,'30000 spotify songs - clustering.csv', row.names = FALSE)
+print(head(songsdf_clean,10))
+
+write.csv(songsdf_clean,'30000 spotify songs - cleaned.csv', row.names = FALSE)
 
 
 
