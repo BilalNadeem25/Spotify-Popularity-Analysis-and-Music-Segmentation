@@ -126,18 +126,59 @@ cluster_profile <- X_df %>%
   summarise(
     mean_val_energy = round(mean(val_energy), 3),
     mean_intensity = round(mean(intensity), 3),
-    mean_ambiance = round(mean(ambiance), 3),
-    count = n()
+    mean_ambiance = round(mean(ambiance), 3)
   )
 
-head(cluster_profile, 10)
+head(cluster_profile)
 
 #add label and cluster column into original df
 df$cluster <- X_df$cluster
-df$label <- case_when(
-  df$cluster == 1 ~ "Feel-Good Pop",
-  df$cluster == 2 ~ "Calm Beats",
-  df$cluster == 3 ~ "Club Anthems",
-  df$cluster == 4 ~ "Hardcore"
+
+df$mood <- case_when(
+  df$cluster == 1 ~ "Feel-Good",
+  df$cluster == 2 ~ "Calm",
+  df$cluster == 3 ~ "Party",
+  df$cluster == 4 ~ "Intense"
 )
-head(df)
+
+cluster_counts <- df %>%
+  group_by(mood) %>%
+  summarise(count = n())
+
+# Plot
+ggplot(cluster_counts, aes(x = mood, y = count, fill = mood)) +
+  geom_bar(stat = "identity", width = 0.6) +
+  labs(
+    title = "Number of Songs in each Cluster",
+    x = "Cluster",
+    y = "Number of Songs"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1") +
+  geom_text(aes(label = count), vjust = -0.5)
+
+# Songs in each cluster
+
+calm_df <- df %>%
+  filter(mood == "Calm") %>%
+  select(track_name, playlist_subgenre, mood)
+
+head(calm_df, 10)
+
+party_df <- df %>%
+  filter(mood == "Party") %>%
+  select(track_name, playlist_subgenre, mood)
+
+head(party_df, 10)
+
+feelgood_df <- df %>%
+  filter(mood == "Feel-Good") %>%
+  select(track_name, playlist_subgenre, mood)
+
+head(feelgood_df, 10)
+
+intense_df <- df %>%
+  filter(mood == "Intense") %>%
+  select(track_name, playlist_subgenre, mood)
+
+head(intense_df, 10)
