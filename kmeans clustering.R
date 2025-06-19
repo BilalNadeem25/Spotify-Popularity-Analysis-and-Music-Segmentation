@@ -20,7 +20,7 @@ library(ClusterR)
 # Read the cleaned dataset
 df <- read.csv('30000 spotify songs - clustering.csv')
 
-features <- c('valence', 'energy')
+features <- c('val_energy', 'intensity', 'ambiance')
 
 # Create a dataframe with audio features only
 X_df <- df %>%
@@ -79,7 +79,7 @@ scree_plot +
     col = c(rep('#000000',10))
   )
 
-cat("According to the Elbow Method plot, the total within cluster sum of square decrease slower after adding more than 6 clusters. Hence, k = 6\n\n")
+cat("According to the Elbow Method plot, the total within cluster sum of square decrease slower after adding more than 4 clusters. Hence, k = 4\n\n")
 
 
 # Set seed for reproducibility
@@ -124,28 +124,20 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = cluster)) +
 cluster_profile <- X_df %>%
   group_by(cluster) %>%
   summarise(
-    mean_valence = round(mean(valence), 3),
-    mean_energy = round(mean(energy), 3),
+    mean_val_energy = round(mean(val_energy), 3),
+    mean_intensity = round(mean(intensity), 3),
+    mean_ambiance = round(mean(ambiance), 3),
     count = n()
   )
 
-cluster_profile
-
-#set the label for every cluster according to the mean value
-X_df$label <- case_when(
-  X_df$cluster == 1 ~ "Melancholic",
-  X_df$cluster == 2 ~ "Happy & Energetic",
-  X_df$cluster == 3 ~ "Chill & Positive",
-  X_df$cluster == 4 ~ "Angry / Tense"
-)
-X_df
+head(cluster_profile, 10)
 
 #add label and cluster column into original df
 df$cluster <- X_df$cluster
 df$label <- case_when(
-  df$cluster == 1 ~ "Melancholic",
-  df$cluster == 2 ~ "Happy & Energetic",
-  df$cluster == 3 ~ "Chill & Positive",
-  df$cluster == 4 ~ "Angry / Tense"
+  df$cluster == 1 ~ "Feel-Good Pop",
+  df$cluster == 2 ~ "Calm Beats",
+  df$cluster == 3 ~ "Club Anthems",
+  df$cluster == 4 ~ "Hardcore"
 )
 head(df)
