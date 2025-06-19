@@ -119,3 +119,33 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = cluster)) +
   scale_color_brewer(palette = "Set1") +
   theme_minimal()
 
+
+#calculate the mean value of each cluster
+cluster_profile <- X_df %>%
+  group_by(cluster) %>%
+  summarise(
+    mean_valence = round(mean(valence), 3),
+    mean_energy = round(mean(energy), 3),
+    count = n()
+  )
+
+cluster_profile
+
+#set the label for every cluster according to the mean value
+X_df$label <- case_when(
+  X_df$cluster == 1 ~ "Melancholic",
+  X_df$cluster == 2 ~ "Happy & Energetic",
+  X_df$cluster == 3 ~ "Chill & Positive",
+  X_df$cluster == 4 ~ "Angry / Tense"
+)
+X_df
+
+#add label and cluster column into original df
+df$cluster <- X_df$cluster
+df$label <- case_when(
+  df$cluster == 1 ~ "Melancholic",
+  df$cluster == 2 ~ "Happy & Energetic",
+  df$cluster == 3 ~ "Chill & Positive",
+  df$cluster == 4 ~ "Angry / Tense"
+)
+head(df)
