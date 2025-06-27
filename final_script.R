@@ -1,12 +1,15 @@
 options(repos = c(CRAN = "https://cloud.r-project.org/"))
 
 #' Title: Spotify Popularity Analysis and Music Segmentation
+#' 
+#' 
 #' Authors: Bilal Nadeem Amin (24068960)
 #'          Wen Qing (24067679)
 #'          Zhang XinYu (24085923)
 #'          Sun Xiaobo (24068064)
 #'          Zhihang Li (24081305）
 #'          
+#' 
 #' 
 #' Introduction
 #' 
@@ -209,7 +212,7 @@ cat("Number of records in dataset after removing outliers: ", nrow(songsdf_clean
 #' 
 #'Now that the data is clean, we begin clustering the songs.
 
-# ----------------------------------------------------Clustering Problem-----------------------------------------------------------
+# -------------------------------Clustering Problem-----------------------------------------------------------
 
 #' When it comes to clustering, it is important to retain features that are informative and show little to no redundancy with other features.
 #' Therefore, we first identified which features are important based on how they interact with each other. We plotted a correlation matrix to visualize this.
@@ -310,7 +313,7 @@ ggcorrplot(cor_matrix,
 
 #' The product of valence and energy, intensity and ambiance stood out as the only features with a moderate to low correlation with each other, hence they were selected as the new features.
 #' 
-new_features <- c('val_energy', 'intensity', 'ambiance')
+new_features <- c('val_energy', 'intensity')
 
 # Create a new dataframe with new audio features
 X_df <- df %>%
@@ -432,25 +435,26 @@ df$mood <- case_when(
   df$cluster == 3 ~ "Intense",
   df$cluster == 4 ~ "Mellow"
 )
-
 #' To visualize the number of songs that falls under each mood, we will plot a vertical bar chart of total number of songs in each cluster.
 #' 
+df$mood_order <- factor(df$mood, levels = c("Party", "Happy-Chill", "Intense", "Mellow"))
+
 # Visualize the number of songs in each mood cluster
 cluster_counts <- df %>%
-  group_by(mood) %>%
-  summarise(count = n())
+  group_by(mood_order) %>%
+  summarise(count = n(), .groups = "drop")
 
-# Plot a bar chart
-ggplot(cluster_counts, aes(x = mood, y = count, fill = mood)) +
+# Bar chart
+ggplot(cluster_counts, aes(x = mood_order, y = count, fill = mood_order)) +
   geom_bar(stat = "identity", width = 0.6) +
+  geom_text(aes(label = count), vjust = -0.5) +
   labs(
-    title = "Number of Songs in each Cluster",
-    x = "Cluster",
+    title = "Number of Songs in Each Mood Cluster",
+    x = "Mood",
     y = "Number of Songs"
   ) +
-  theme_minimal() +
   scale_fill_brewer(palette = "Set1") +
-  geom_text(aes(label = count), vjust = -0.5)
+  theme_minimal()
 
 #' As you can see, most of the songs in the dataset are mellow, followed by happy-chill songs, then intense songs and lastly only 169 songs in the party category.
 #' We will display the top 10 songs that fall under each mood:
@@ -488,7 +492,7 @@ intense_df <- df %>%
 head(intense_df, 10)
 
 
-#-----------------------------------------------------Regression Problem-------------------------------------------------------------------
+#-----------------------------------Regression Problem-------------------------------------------------------------------
 
 #'
 #' For our regression problem, we first perform some exploratory data analysis (EDA) to understand how features other than audio data interact with track popularity.
@@ -711,8 +715,8 @@ ggplot(result_df, aes(x = Actual, y = Predicted)) +
 #' 
 #' Conclusion
 #' 
-#' In the clustering problem, there was a decent overlap between Mellow and Party mood clusters and it is likely that most of the Party songs were incorrectly segmented
-#' as Mellow songs. In our opinion, exploring more permutations of various features could have distinguished Party and Mellow songs more properly. In the regression problem,
+#' In the clustering problem, there was a decent overlap between Mellow and Intense mood clusters and it is likely that some of the Mellow songs were incorrectly segmented as Intense songs. 
+#' In our opinion, exploring more permutations of various features could have distinguished these two clusters more properly. In the regression problem,
 #' even though the overall predictions were close to the reference line, there was a greater spread at lower popularity extremes of 0. It is possible these actual popularity
 #' scores of 0 are outliers or they could potentially have been influenced by other factors not included in the dataset. Nevertheless, the performance of the model could be
 #' further improved with more features like stream count and number of playlists songs are added in.
